@@ -25,14 +25,23 @@ def build_features():
     # DNF Logic: If not classified as Finished/Laps down, mark as 1.
     df['is_DNF'] = df['Status'].apply(lambda x: 0 if 'Finished' in str(x) or 'Lap' in str(x) else 1)
     
-    # Sorting Label: Lower is better. Finisher 1-20, DNFs ranked by laps completed.
-    df['RankLabel'] = df.apply(lambda x: x['FinishPos'] if x['is_DNF'] == 0 else 20 + (1 - x['LapsCompleted']/100), axis=1)
+    # Sort data chronologically, and within each race, sort by:
+    # 1. is_DNF (0 first, 1 last)
+    # 2. FinishPos (1 first)
+    # 3. LapsCompleted (more laps first for DNFs)
+    df = df.sort_values(
+        ['Season', 'Round', 'is_DNF', 'FinishPos', 'LapsCompleted'],
+        ascending=[True, True, True, True, False]
+    )
     
-    # Relevance Label: Higher is better (XGBRanker target)
-    df['RelevanceLabel'] = 22.0 - df['RankLabel']
-
+    # Within each race (Season + Round), assign a sequential rank (1 to N)
+    df['Rank'] = df.groupby(['Season', 'Round']).cumcount() + 1
+    
+    # Relevance Label: Higher is better, must be integer (0 or positive) for XGBRanker
+    group_sizes = df.groupby(['Season', 'Round'])['Season'].transform('size')
+    df['RelevanceLabel'] = (group_sizes - df['Rank']).astype(int)
+    
     # Rolling Form (Grouped by Driver and Team)
-    df = df.sort_values(['Season', 'Round'])
     df['DriverForm'] = df.groupby('Driver')['FinishPos'].transform(lambda x: x.shift(1).rolling(5).mean())
     df['TeamForm'] = df.groupby('Team')['FinishPos'].transform(lambda x: x.shift(1).rolling(5).mean())
     df['Team_DNF_Rate'] = df.groupby('Team')['is_DNF'].transform(lambda x: x.shift(1).rolling(10).mean())
