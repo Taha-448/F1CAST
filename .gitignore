@@ -1,0 +1,16 @@
+﻿# Data and Caches
+data/
+cache/
+fastf1_cache/
+logs/
+models/
+
+# Python virtual environment and system files
+venv/
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+.idea/
+.vscode/
+.env
