@@ -34,7 +34,8 @@ class F1RankingModel:
         
         # 3. Train Ranker (Grouped by Season+Round)
         groups = train_df.groupby(['Season', 'Round']).size().values
-        self.ranker.fit(X_rank, train_df['RelevanceLabel'], group=groups, sample_weight=train_df['SampleWeight'])
+        group_weights = train_df.groupby(['Season', 'Round'])['SampleWeight'].first().values
+        self.ranker.fit(X_rank, train_df['RelevanceLabel'], group=groups, sample_weight=group_weights)
 
     def predict(self, test_df):
         dnf_probs = self.dnf_model.predict_proba(test_df[self.feature_cols])[:, 1]
