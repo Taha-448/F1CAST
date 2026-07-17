@@ -22,26 +22,26 @@ def run_pipeline():
     
     model = F1RankingModel(features)
 
-    # Train split: 2018 to 2026 Round 7
-    train_df = df[(df['Season'] < 2026) | ((df['Season'] == 2026) & (df['Round'] <= 7))].copy()
-    # Test split: 2026 Rounds 8 and 9
-    test_df = df[(df['Season'] == 2026) & (df['Round'].isin([8, 9]))].copy()
+    # Train split: 2018 to 2026 Round 5
+    train_df = df[(df['Season'] < 2026) | ((df['Season'] == 2026) & (df['Round'] <= 5))].copy()
+    # Test split: 2026 Rounds 6 to 9
+    test_df = df[(df['Season'] == 2026) & (df['Round'].isin([6, 7, 8, 9]))].copy()
 
     if train_df.empty:
         print("Error: Train dataset is empty. Ensure you have ingested the historical data.")
         return
     if test_df.empty:
-        print("Error: Test dataset is empty. Ensure 2026 Rounds 8 and 9 have been ingested.")
+        print("Error: Test dataset is empty. Ensure 2026 Rounds 6 to 9 have been ingested.")
         return
 
     # Sort training data by Season and Round to ensure group grouping works correctly in XGBRanker
     train_df = train_df.sort_values(['Season', 'Round'])
     test_df = test_df.sort_values(['Season', 'Round'])
 
-    print(f"Training model on {len(train_df)} rows (2018 to 2026 Round 7)...")
+    print(f"Training model on {len(train_df)} rows (2018 to 2026 Round 5)...")
     model.fit(train_df)
     
-    print(f"Evaluating model on {len(test_df)} rows (2026 Rounds 8 and 9)...")
+    print(f"Evaluating model on {len(test_df)} rows (2026 Rounds 6 to 9)...")
     scores, dnf_p = model.predict(test_df)
     
     test_df['Predicted_Score'] = scores
