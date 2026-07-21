@@ -107,6 +107,7 @@ def run_ingestion(start_year=2018, end_year=None, force_refresh=False):
                         'Season': year,
                         'Round': round_num,
                         'Circuit': event['Location'],
+                        'EventName': event.get('EventName', ''),
                         'Driver': driver['Abbreviation'],
                         'Team': driver['TeamName'],
                         'GridPosition': driver['GridPosition'],

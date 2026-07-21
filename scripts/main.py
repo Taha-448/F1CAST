@@ -10,6 +10,65 @@ try:
 except ImportError:
     from scripts.model_pipeline import F1RankingModel
 
+LOCATION_TO_GP = {
+    'Spa-Francorchamps': 'Belgian GP',
+    'Spa': 'Belgian GP',
+    'Sakhir': 'Bahrain GP',
+    'Bahrain': 'Bahrain GP',
+    'Jeddah': 'Saudi Arabian GP',
+    'Melbourne': 'Australian GP',
+    'Suzuka': 'Japanese GP',
+    'Shanghai': 'Chinese GP',
+    'Miami': 'Miami GP',
+    'Imola': 'Emilia Romagna GP',
+    'Monte Carlo': 'Monaco GP',
+    'Monaco': 'Monaco GP',
+    'Montreal': 'Canadian GP',
+    'Barcelona': 'Spanish GP',
+    'Spielberg': 'Austrian GP',
+    'Silverstone': 'British GP',
+    'Budapest': 'Hungarian GP',
+    'Zandvoort': 'Dutch GP',
+    'Monza': 'Italian GP',
+    'Baku': 'Azerbaijan GP',
+    'Singapore': 'Singapore GP',
+    'Austin': 'United States GP',
+    'Mexico City': 'Mexico City GP',
+    'São Paulo': 'São Paulo GP',
+    'Interlagos': 'São Paulo GP',
+    'Las Vegas': 'Las Vegas GP',
+    'Lusail': 'Qatar GP',
+    'Yas Marina': 'Abu Dhabi GP',
+    'Abu Dhabi': 'Abu Dhabi GP',
+    'Paul Ricard': 'French GP',
+    'Le Castellet': 'French GP',
+    'Portimão': 'Portuguese GP',
+    'Nürburgring': 'Eifel GP',
+    'Mugello': 'Tuscan GP',
+    'Sochi': 'Russian GP',
+}
+
+def format_gp_name(row_group):
+    if 'EventName' in row_group.columns:
+        evt = row_group['EventName'].iloc[0]
+        if evt and pd.notnull(evt) and str(evt).strip():
+            evt_str = str(evt).strip()
+            gp_clean = evt_str.replace("Grand Prix", "GP").strip()
+            if not gp_clean.endswith("GP"):
+                gp_clean += " GP"
+            return gp_clean
+
+    if 'Circuit' in row_group.columns:
+        circ = str(row_group['Circuit'].iloc[0]).strip()
+        if circ in LOCATION_TO_GP:
+            return LOCATION_TO_GP[circ]
+        for key, name in LOCATION_TO_GP.items():
+            if key.lower() in circ.lower():
+                return name
+        return f"{circ} GP"
+
+    return ""
+
 def run_pipeline(
     data_path='data/engineered/pro_f1_engineered.parquet', 
     test_season=None, 
@@ -93,14 +152,14 @@ def run_pipeline(
     correlations = {}
     
     for (season, round_num), group in test_df.groupby(['Season', 'Round']):
-        gp_name = group['Circuit'].iloc[0] if 'Circuit' in group.columns and not group['Circuit'].empty else ""
+        gp_name = format_gp_name(group)
         coef, _ = spearmanr(group['Predicted_Rank'], group['FinishPos'])
         if np.isnan(coef):
             coef = 0.0
         
         label_str = f"Season {season} Round {round_num}"
         if gp_name:
-            label_str += f" ({gp_name} GP)"
+            label_str += f" ({gp_name})"
         print(f"{label_str} Spearman Correlation: {coef:.3f}")
         correlations[f"{season}_R{round_num}"] = coef
         
@@ -135,7 +194,7 @@ def plot_results(test_df, show_plot=False):
     for i, (season, r) in enumerate(unique_races):
         ax = axes[i]
         round_data = test_df[(test_df['Season'] == season) & (test_df['Round'] == r)].copy()
-        gp_name = round_data['Circuit'].iloc[0] if 'Circuit' in round_data.columns and not round_data['Circuit'].empty else ""
+        gp_name = format_gp_name(round_data)
         
         # Sort by actual finish position
         round_data = round_data.sort_values('FinishPos')
@@ -180,7 +239,7 @@ def plot_results(test_df, show_plot=False):
             
         title_text = f"{season} Round {r}"
         if gp_name:
-            title_text += f"\n({gp_name} GP)"
+            title_text += f"\n({gp_name})"
         ax.set_title(title_text, fontsize=12, fontweight='bold', pad=10)
         ax.set_xlabel("Actual Finish Position", fontsize=11)
         if i == 0:
