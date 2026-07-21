@@ -182,5 +182,102 @@ def run_ingestion(start_year=2018, end_year=None, force_refresh=False):
         'up_to_date': False
     }
 
+def get_upcoming_race_grid(year=None, round_num=None):
+    """
+    Fetches starting grid data for an upcoming race round (from Qualifying).
+    Returns a pandas DataFrame formatted identically to raw race rows.
+    """
+    if year is None:
+        year = datetime.now().year
+
+    schedule = fastf1.get_event_schedule(year)
+    race_events = schedule[schedule['EventFormat'] != 'testing']
+
+    target_event = None
+    if round_num is not None:
+        matched = race_events[race_events['RoundNumber'] == round_num]
+        if not matched.empty:
+            target_event = matched.iloc[0]
+    else:
+        # Find the first event that hasn't completed or next upcoming round
+        raw_path = 'data/raw/pro_f1_raw.parquet'
+        existing_rounds = set()
+        if os.path.exists(raw_path):
+            existing_df = pd.read_parquet(raw_path)
+            if not existing_df.empty:
+                existing_rounds = set(existing_df[existing_df['Season'] == year]['Round'].unique())
+        
+        for _, evt in race_events.iterrows():
+            r_num = int(evt['RoundNumber'])
+            if r_num not in existing_rounds:
+                target_event = evt
+                round_num = r_num
+                break
+
+    if target_event is None:
+        print(f"[INGESTOR] No upcoming or uningested race found for {year}.")
+        return None
+
+    print(f"[INGESTOR] Fetching pre-race grid for {year} Round {round_num} - {target_event['EventName']}...")
+    
+    session_data = []
+    try:
+        # Try loading Qualifying session
+        session_q = fastf1.get_session(year, round_num, 'Q')
+        try:
+            session_q.load(laps=False, telemetry=False, weather=True)
+        except Exception:
+            session_q.load(laps=False, telemetry=False, weather=False)
+
+        q_results = session_q.results
+        if q_results is None or q_results.empty:
+            print(f"[INGESTOR WARNING] Qualifying results not available yet for {year} R{round_num}.")
+            return None
+
+        weather = session_q.weather_data
+        is_sprint = 1 if 'Sprint' in str(target_event.get('EventFormat', '')) else 0
+        mean_track_temp = 25.0
+        has_rain = 0
+
+        if weather is not None and not weather.empty:
+            if 'TrackTemp' in weather.columns:
+                mean_track_temp = weather['TrackTemp'].mean()
+            if 'Rainfall' in weather.columns:
+                has_rain = 1 if weather['Rainfall'].any() else 0
+
+        for _, driver in q_results.iterrows():
+            pos = driver.get('Position', driver.get('ClassifiedPosition', 20))
+            try:
+                grid_pos = int(pos)
+            except (ValueError, TypeError):
+                grid_pos = 20
+
+            session_data.append({
+                'Season': year,
+                'Round': round_num,
+                'Circuit': target_event['Location'],
+                'EventName': target_event.get('EventName', ''),
+                'Driver': driver['Abbreviation'],
+                'Team': driver['TeamName'],
+                'GridPosition': grid_pos,
+                'FinishPos': grid_pos,  # Expected dummy position for rolling metrics
+                'Status': 'Finished',
+                'LapsCompleted': 0,
+                'TrackTemp': mean_track_temp,
+                'Rain': has_rain,
+                'IsSprint': is_sprint
+            })
+
+    except Exception as err:
+        print(f"[INGESTOR ERROR] Failed to fetch starting grid for {year} R{round_num}: {err}")
+        return None
+
+    if session_data:
+        df_grid = pd.DataFrame(session_data)
+        print(f"[INGESTOR] Successfully fetched {len(df_grid)} driver starting slots for {year} R{round_num}.")
+        return df_grid
+
+    return None
+
 if __name__ == "__main__":
     run_ingestion()

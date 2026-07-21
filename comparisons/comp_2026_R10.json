@@ -1,0 +1,184 @@
+{
+  "season": 2026,
+  "round": 10,
+  "gp_name": "Belgian GP",
+  "spearman_correlation": 0.7366,
+  "comparison": [
+    {
+      "Driver": "ANT",
+      "Team": "Mercedes",
+      "GridPosition": 1.0,
+      "FinishPos": 1.0,
+      "Predicted_Rank": 1.0,
+      "Status": "Finished"
+    },
+    {
+      "Driver": "LEC",
+      "Team": "Ferrari",
+      "GridPosition": 4.0,
+      "FinishPos": 2.0,
+      "Predicted_Rank": 5.0,
+      "Status": "Finished"
+    },
+    {
+      "Driver": "VER",
+      "Team": "Red Bull Racing",
+      "GridPosition": 2.0,
+      "FinishPos": 3.0,
+      "Predicted_Rank": 3.0,
+      "Status": "Finished"
+    },
+    {
+      "Driver": "HAM",
+      "Team": "Ferrari",
+      "GridPosition": 5.0,
+      "FinishPos": 4.0,
+      "Predicted_Rank": 4.0,
+      "Status": "Finished"
+    },
+    {
+      "Driver": "PIA",
+      "Team": "McLaren",
+      "GridPosition": 6.0,
+      "FinishPos": 5.0,
+      "Predicted_Rank": 7.0,
+      "Status": "Finished"
+    },
+    {
+      "Driver": "HAD",
+      "Team": "Red Bull Racing",
+      "GridPosition": 21.0,
+      "FinishPos": 6.0,
+      "Predicted_Rank": 6.0,
+      "Status": "Finished"
+    },
+    {
+      "Driver": "NOR",
+      "Team": "McLaren",
+      "GridPosition": 13.0,
+      "FinishPos": 7.0,
+      "Predicted_Rank": 9.0,
+      "Status": "Finished"
+    },
+    {
+      "Driver": "BOR",
+      "Team": "Audi",
+      "GridPosition": 8.0,
+      "FinishPos": 8.0,
+      "Predicted_Rank": 12.0,
+      "Status": "Finished"
+    },
+    {
+      "Driver": "LIN",
+      "Team": "Racing Bulls",
+      "GridPosition": 7.0,
+      "FinishPos": 9.0,
+      "Predicted_Rank": 8.0,
+      "Status": "Finished"
+    },
+    {
+      "Driver": "COL",
+      "Team": "Alpine",
+      "GridPosition": 11.0,
+      "FinishPos": 10.0,
+      "Predicted_Rank": 13.0,
+      "Status": "Finished"
+    },
+    {
+      "Driver": "GAS",
+      "Team": "Alpine",
+      "GridPosition": 10.0,
+      "FinishPos": 11.0,
+      "Predicted_Rank": 11.0,
+      "Status": "Finished"
+    },
+    {
+      "Driver": "LAW",
+      "Team": "Racing Bulls",
+      "GridPosition": 9.0,
+      "FinishPos": 12.0,
+      "Predicted_Rank": 10.0,
+      "Status": "Finished"
+    },
+    {
+      "Driver": "HUL",
+      "Team": "Audi",
+      "GridPosition": 12.0,
+      "FinishPos": 13.0,
+      "Predicted_Rank": 14.0,
+      "Status": "Finished"
+    },
+    {
+      "Driver": "BEA",
+      "Team": "Haas F1 Team",
+      "GridPosition": 14.0,
+      "FinishPos": 14.0,
+      "Predicted_Rank": 16.0,
+      "Status": "Finished"
+    },
+    {
+      "Driver": "ALB",
+      "Team": "Williams",
+      "GridPosition": 15.0,
+      "FinishPos": 15.0,
+      "Predicted_Rank": 17.0,
+      "Status": "Finished"
+    },
+    {
+      "Driver": "SAI",
+      "Team": "Williams",
+      "GridPosition": 19.0,
+      "FinishPos": 16.0,
+      "Predicted_Rank": 22.0,
+      "Status": "Finished"
+    },
+    {
+      "Driver": "OCO",
+      "Team": "Haas F1 Team",
+      "GridPosition": 16.0,
+      "FinishPos": 17.0,
+      "Predicted_Rank": 15.0,
+      "Status": "Finished"
+    },
+    {
+      "Driver": "BOT",
+      "Team": "Cadillac",
+      "GridPosition": 17.0,
+      "FinishPos": 18.0,
+      "Predicted_Rank": 18.0,
+      "Status": "Lapped"
+    },
+    {
+      "Driver": "ALO",
+      "Team": "Aston Martin",
+      "GridPosition": 22.0,
+      "FinishPos": 19.0,
+      "Predicted_Rank": 21.0,
+      "Status": "Lapped"
+    },
+    {
+      "Driver": "STR",
+      "Team": "Aston Martin",
+      "GridPosition": 20.0,
+      "FinishPos": 20.0,
+      "Predicted_Rank": 19.0,
+      "Status": "Retired"
+    },
+    {
+      "Driver": "PER",
+      "Team": "Cadillac",
+      "GridPosition": 18.0,
+      "FinishPos": 20.0,
+      "Predicted_Rank": 20.0,
+      "Status": "Retired"
+    },
+    {
+      "Driver": "RUS",
+      "Team": "Mercedes",
+      "GridPosition": 3.0,
+      "FinishPos": 20.0,
+      "Predicted_Rank": 2.0,
+      "Status": "Retired"
+    }
+  ]
+}

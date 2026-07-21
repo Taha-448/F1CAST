@@ -1,5 +1,6 @@
 # scripts/main.py
 import os
+import json
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -143,13 +144,18 @@ def run_pipeline(
     test_df['Predicted_Rank'] = test_df.groupby(['Season', 'Round'])['Predicted_Score'].rank(ascending=False)
 
     os.makedirs('logs', exist_ok=True)
+    os.makedirs('predictions', exist_ok=True)
+    os.makedirs('comparisons', exist_ok=True)
+
     results_path = 'logs/latest_test_results.csv'
     test_df.drop(columns=['is_test']).to_csv(results_path, index=False)
     print(f"Saved test predictions to {results_path}")
 
-    # Display evaluation metrics
+    # Display evaluation metrics & export JSON reports
     print("\n=== EVALUATION RESULTS ===")
     correlations = {}
+    last_pred_json = None
+    last_comp_json = None
     
     for (season, round_num), group in test_df.groupby(['Season', 'Round']):
         gp_name = format_gp_name(group)
@@ -162,6 +168,33 @@ def run_pipeline(
             label_str += f" ({gp_name})"
         print(f"{label_str} Spearman Correlation: {coef:.3f}")
         correlations[f"{season}_R{round_num}"] = coef
+
+        # 1. Export predictions JSON
+        pred_records = group[['Predicted_Rank', 'Driver', 'Team', 'GridPosition', 'DNF_Risk']].to_dict(orient='records')
+        pred_data = {
+            "season": int(season),
+            "round": int(round_num),
+            "gp_name": gp_name,
+            "predictions": pred_records
+        }
+        last_pred_json = f"predictions/pred_{season}_R{round_num}.json"
+        with open(last_pred_json, 'w', encoding='utf-8') as f:
+            json.dump(pred_data, f, indent=2)
+        print(f"Exported prediction JSON: {last_pred_json}")
+
+        # 2. Export comparison JSON
+        comp_records = group[['Driver', 'Team', 'GridPosition', 'FinishPos', 'Predicted_Rank', 'Status']].to_dict(orient='records')
+        comp_data = {
+            "season": int(season),
+            "round": int(round_num),
+            "gp_name": gp_name,
+            "spearman_correlation": round(float(coef), 4),
+            "comparison": comp_records
+        }
+        last_comp_json = f"comparisons/comp_{season}_R{round_num}.json"
+        with open(last_comp_json, 'w', encoding='utf-8') as f:
+            json.dump(comp_data, f, indent=2)
+        print(f"Exported comparison JSON: {last_comp_json}")
         
     avg_corr = sum(correlations.values()) / len(correlations) if correlations else 0.0
     print(f"Average Spearman Correlation: {avg_corr:.3f}")
@@ -177,7 +210,9 @@ def run_pipeline(
         'correlations': correlations,
         'avg_spearman': avg_corr,
         'results_csv': results_path,
-        'plot_png': plot_path
+        'plot_png': plot_path,
+        'last_pred_json': last_pred_json,
+        'last_comp_json': last_comp_json
     }
 
 def plot_results(test_df, show_plot=False):

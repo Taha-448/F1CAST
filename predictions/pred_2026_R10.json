@@ -1,0 +1,161 @@
+{
+  "season": 2026,
+  "round": 10,
+  "gp_name": "Belgian GP",
+  "predictions": [
+    {
+      "Predicted_Rank": 1.0,
+      "Driver": "ANT",
+      "Team": "Mercedes",
+      "GridPosition": 1.0,
+      "DNF_Risk": 0.19278471171855927
+    },
+    {
+      "Predicted_Rank": 5.0,
+      "Driver": "LEC",
+      "Team": "Ferrari",
+      "GridPosition": 4.0,
+      "DNF_Risk": 0.014678992331027985
+    },
+    {
+      "Predicted_Rank": 3.0,
+      "Driver": "VER",
+      "Team": "Red Bull Racing",
+      "GridPosition": 2.0,
+      "DNF_Risk": 0.0038989463355392218
+    },
+    {
+      "Predicted_Rank": 4.0,
+      "Driver": "HAM",
+      "Team": "Ferrari",
+      "GridPosition": 5.0,
+      "DNF_Risk": 0.3783034384250641
+    },
+    {
+      "Predicted_Rank": 7.0,
+      "Driver": "PIA",
+      "Team": "McLaren",
+      "GridPosition": 6.0,
+      "DNF_Risk": 0.39956340193748474
+    },
+    {
+      "Predicted_Rank": 6.0,
+      "Driver": "HAD",
+      "Team": "Red Bull Racing",
+      "GridPosition": 21.0,
+      "DNF_Risk": 0.011536422185599804
+    },
+    {
+      "Predicted_Rank": 9.0,
+      "Driver": "NOR",
+      "Team": "McLaren",
+      "GridPosition": 13.0,
+      "DNF_Risk": 0.005363657139241695
+    },
+    {
+      "Predicted_Rank": 12.0,
+      "Driver": "BOR",
+      "Team": "Audi",
+      "GridPosition": 8.0,
+      "DNF_Risk": 0.0005824423860758543
+    },
+    {
+      "Predicted_Rank": 8.0,
+      "Driver": "LIN",
+      "Team": "Racing Bulls",
+      "GridPosition": 7.0,
+      "DNF_Risk": 0.006487839389592409
+    },
+    {
+      "Predicted_Rank": 13.0,
+      "Driver": "COL",
+      "Team": "Alpine",
+      "GridPosition": 11.0,
+      "DNF_Risk": 0.004567733034491539
+    },
+    {
+      "Predicted_Rank": 11.0,
+      "Driver": "GAS",
+      "Team": "Alpine",
+      "GridPosition": 10.0,
+      "DNF_Risk": 0.016420459374785423
+    },
+    {
+      "Predicted_Rank": 10.0,
+      "Driver": "LAW",
+      "Team": "Racing Bulls",
+      "GridPosition": 9.0,
+      "DNF_Risk": 0.028395503759384155
+    },
+    {
+      "Predicted_Rank": 14.0,
+      "Driver": "HUL",
+      "Team": "Audi",
+      "GridPosition": 12.0,
+      "DNF_Risk": 0.024202575907111168
+    },
+    {
+      "Predicted_Rank": 16.0,
+      "Driver": "BEA",
+      "Team": "Haas F1 Team",
+      "GridPosition": 14.0,
+      "DNF_Risk": 0.009690335020422935
+    },
+    {
+      "Predicted_Rank": 17.0,
+      "Driver": "ALB",
+      "Team": "Williams",
+      "GridPosition": 15.0,
+      "DNF_Risk": 0.002318969927728176
+    },
+    {
+      "Predicted_Rank": 22.0,
+      "Driver": "SAI",
+      "Team": "Williams",
+      "GridPosition": 19.0,
+      "DNF_Risk": 0.9192606210708618
+    },
+    {
+      "Predicted_Rank": 15.0,
+      "Driver": "OCO",
+      "Team": "Haas F1 Team",
+      "GridPosition": 16.0,
+      "DNF_Risk": 0.012512768618762493
+    },
+    {
+      "Predicted_Rank": 18.0,
+      "Driver": "BOT",
+      "Team": "Cadillac",
+      "GridPosition": 17.0,
+      "DNF_Risk": 0.0060612899251282215
+    },
+    {
+      "Predicted_Rank": 21.0,
+      "Driver": "ALO",
+      "Team": "Aston Martin",
+      "GridPosition": 22.0,
+      "DNF_Risk": 0.551041305065155
+    },
+    {
+      "Predicted_Rank": 19.0,
+      "Driver": "STR",
+      "Team": "Aston Martin",
+      "GridPosition": 20.0,
+      "DNF_Risk": 0.05758450925350189
+    },
+    {
+      "Predicted_Rank": 20.0,
+      "Driver": "PER",
+      "Team": "Cadillac",
+      "GridPosition": 18.0,
+      "DNF_Risk": 0.44362854957580566
+    },
+    {
+      "Predicted_Rank": 2.0,
+      "Driver": "RUS",
+      "Team": "Mercedes",
+      "GridPosition": 3.0,
+      "DNF_Risk": 0.1435108631849289
+    }
+  ]
+}

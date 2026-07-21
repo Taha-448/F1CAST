@@ -10,6 +10,7 @@ Automates the complete workflow:
 
 import os
 import sys
+import json
 import argparse
 from datetime import datetime
 
@@ -21,9 +22,11 @@ if PROJECT_ROOT not in sys.path:
 if SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, SCRIPTS_DIR)
 
-from ingestor import run_ingestion
+from ingestor import run_ingestion, get_upcoming_race_grid
 from engineer import build_features
-from main import run_pipeline as run_model_pipeline
+from main import run_pipeline as run_model_pipeline, format_gp_name
+import state as state_mgr
+import notifier
 
 def main():
     parser = argparse.ArgumentParser(
@@ -112,6 +115,34 @@ def main():
         print("ERROR: Model training/evaluation failed. Exiting.")
         sys.exit(1)
 
+    # 4. State Management & Email Dispatches
+    print("\n--- STAGE 4: STATE MANAGEMENT & EMAIL NOTIFICATIONS ---")
+    comp_file = eval_res.get('last_comp_json')
+    pred_file = eval_res.get('last_pred_json')
+
+    if comp_file and os.path.exists(comp_file):
+        try:
+            with open(comp_file, 'r', encoding='utf-8') as f:
+                comp_data = json.load(f)
+            
+            season = comp_data['season']
+            round_num = comp_data['round']
+            gp_name = comp_data['gp_name']
+            spearman_corr = comp_data['spearman_correlation']
+            comp_list = comp_data['comparison']
+
+            if not state_mgr.is_comparison_sent(season, round_num):
+                print(f"[STATE] Post-race comparison email pending for {season} R{round_num} ({gp_name}). Processing report...")
+                subject = f"F1CAST Results: {season} Round {round_num} ({gp_name})"
+                html = notifier.format_comparison_email(season, round_num, gp_name, comp_list, spearman_corr)
+                dispatched = notifier.send_email(subject, html)
+                state_mgr.mark_comparison_sent(season, round_num)
+                print(f"[STATE] Marked post-race comparison state for {season} R{round_num}.")
+            else:
+                print(f"[STATE] Post-race comparison email already sent for {season} R{round_num} ({gp_name}). Skipping dispatch.")
+        except Exception as err:
+            print(f"[STATE ERROR] Could not process comparison notification: {err}")
+
     print("\n" + "=" * 60)
     print("PIPELINE EXECUTION COMPLETED SUCCESSFULLY")
     print("=" * 60)
@@ -120,8 +151,12 @@ def main():
     print(f"Average Spearman Correlation: {eval_res['avg_spearman']:.3f}")
     print(f"Results CSV:    {eval_res['results_csv']}")
     print(f"Evaluation Plot:{eval_res['plot_png']}")
+    if eval_res.get('last_pred_json'):
+        print(f"Prediction JSON:{eval_res['last_pred_json']}")
+    if eval_res.get('last_comp_json'):
+        print(f"Comparison JSON:{eval_res['last_comp_json']}")
     print("=" * 60)
-
 
 if __name__ == "__main__":
     main()
+
