@@ -58,8 +58,8 @@ def main():
         help="Target round numbers for model evaluation split (e.g., 8 9 10)"
     )
     parser.add_argument(
-        '--num-test-rounds', type=int, default=3,
-        help="Number of latest completed rounds to use as evaluation test set if explicit rounds are not specified (default: 3)"
+        '--num-test-rounds', type=int, default=1,
+        help="Number of latest completed rounds to use as evaluation test set if explicit rounds are not specified (default: 1)"
     )
     parser.add_argument(
         '--show-plot', action='store_true',

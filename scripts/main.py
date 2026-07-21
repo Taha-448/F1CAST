@@ -14,7 +14,7 @@ def run_pipeline(
     data_path='data/engineered/pro_f1_engineered.parquet', 
     test_season=None, 
     test_rounds=None, 
-    num_test_rounds=3, 
+    num_test_rounds=1, 
     show_plot=False
 ):
     if not os.path.exists(data_path):

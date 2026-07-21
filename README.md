@@ -78,7 +78,7 @@ python scripts/run_pipeline.py
 
 #### Custom Pipeline Options:
 ```bash
-# Ingest up to latest available races and evaluate on the 3 most recent rounds
+# Ingest up to latest available races and evaluate on the single most recent race (trains on all prior races)
 python scripts/run_pipeline.py
 
 # Force re-downloading race data
