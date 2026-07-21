@@ -1,14 +1,19 @@
 # scripts/engineer.py
 import os
+import sys
 import pandas as pd
 import numpy as np
-from metadata import get_circuit_metadata
 
-def build_features():
-    raw_path = 'data/raw/pro_f1_raw.parquet'
+# Allow importing metadata whether running directly from scripts/ or from workspace root
+try:
+    from metadata import get_circuit_metadata
+except ImportError:
+    from scripts.metadata import get_circuit_metadata
+
+def build_features(raw_path='data/raw/pro_f1_raw.parquet', output_path='data/engineered/pro_f1_engineered.parquet'):
     if not os.path.exists(raw_path):
         print(f"Error: {raw_path} not found. Please run ingestor.py first.")
-        return
+        return None
         
     df = pd.read_parquet(raw_path)
     df['FinishPos'] = pd.to_numeric(df['FinishPos'], errors='coerce').fillna(20)
@@ -69,11 +74,19 @@ def build_features():
     df['GridPosition'] = df['GridPosition'].fillna(20)
     df.fillna(0, inplace=True)
     
-    engineered_dir = 'data/engineered'
-    os.makedirs(engineered_dir, exist_ok=True)
-    output_path = os.path.join(engineered_dir, 'pro_f1_engineered.parquet')
+    engineered_dir = os.path.dirname(output_path)
+    if engineered_dir:
+        os.makedirs(engineered_dir, exist_ok=True)
     df.to_parquet(output_path, index=False)
-    print(f"Successfully saved engineered features to {output_path}")
+    
+    total_races = len(df.groupby(['Season', 'Round']))
+    print(f"Successfully saved engineered features ({len(df)} rows across {total_races} races) to {output_path}")
+    
+    return {
+        'rows': len(df),
+        'total_races': total_races,
+        'output_path': output_path
+    }
 
 if __name__ == "__main__":
     build_features()

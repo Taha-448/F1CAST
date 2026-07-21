@@ -2,15 +2,22 @@
 import os
 import gc
 import shutil
+from datetime import datetime
 import fastf1
 import pandas as pd
 
 os.makedirs('cache', exist_ok=True)
 fastf1.Cache.enable_cache('cache')
 
-def run_ingestion(start_year, end_year):
+def run_ingestion(start_year=2018, end_year=None, force_refresh=False):
+    if end_year is None:
+        end_year = datetime.now().year
+
     temp_dir = 'data/raw/temp_races'
     os.makedirs(temp_dir, exist_ok=True)
+    
+    new_races_count = 0
+    today = datetime.now().date()
     
     for year in range(start_year, end_year + 1):
         try:
@@ -23,12 +30,14 @@ def run_ingestion(start_year, end_year):
         for _, event in race_events.iterrows():
             round_num = event['RoundNumber']
             
-            # Skip rounds > 9 for 2026 as per requirements
-            if year == 2026 and round_num > 9:
-                continue
+            # Skip future events whose EventDate has not passed yet
+            if 'EventDate' in event and pd.notnull(event['EventDate']):
+                event_date = pd.to_datetime(event['EventDate']).date()
+                if event_date > today:
+                    continue
                 
             temp_file_path = os.path.join(temp_dir, f"{year}_R{round_num}.parquet")
-            if os.path.exists(temp_file_path):
+            if os.path.exists(temp_file_path) and not force_refresh:
                 print(f"Already processed: {year} R{round_num} - {event['EventName']}")
                 continue
                 
@@ -37,11 +46,23 @@ def run_ingestion(start_year, end_year):
             try:
                 print(f"Loading: {year} R{round_num} - {event['EventName']}")
                 session = fastf1.get_session(year, round_num, 'R')
-                session.load(laps=True, telemetry=False, weather=True)
+                try:
+                    session.load(laps=True, telemetry=False, weather=True)
+                except Exception as load_err:
+                    print(f"Notice: Laps not available for {year} R{round_num} ({load_err}). Retrying with laps=False...")
+                    session.load(laps=False, telemetry=False, weather=True)
                 
                 results = session.results
+                if results is None or results.empty:
+                    session.load(laps=False, telemetry=False, weather=False)
+                    results = session.results
+                
+                if results is None or results.empty:
+                    print(f"No results found for {year} R{round_num} ({event['EventName']}). Skipping.")
+                    continue
+
                 weather = session.weather_data
-                is_sprint = 1 if 'Sprint' in event['EventFormat'] else 0
+                is_sprint = 1 if 'Sprint' in str(event.get('EventFormat', '')) else 0
                 
                 # Fetch mean TrackTemp and Rain availability safely
                 mean_track_temp = 25.0
@@ -72,6 +93,7 @@ def run_ingestion(start_year, end_year):
                 if session_data:
                     pd.DataFrame(session_data).to_parquet(temp_file_path, index=False)
                     print(f"Saved: {temp_file_path}")
+                    new_races_count += 1
             except Exception as e:
                 print(f"Error loading {year} R{round_num}: {e}")
             finally:
@@ -80,25 +102,40 @@ def run_ingestion(start_year, end_year):
                 del session_data
                 gc.collect()
                 
-    # Consolidate all parquet files into a single parquet file
-    print("Consolidating all temporary race files...")
+    # Consolidate all temporary race files into the main raw dataset
+    print("Consolidating race files into data/raw/pro_f1_raw.parquet...")
     all_files = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if f.endswith('.parquet')]
-    if all_files:
-        dfs = []
-        for file in all_files:
-            dfs.append(pd.read_parquet(file))
+    
+    dfs = []
+    raw_path = 'data/raw/pro_f1_raw.parquet'
+    if os.path.exists(raw_path):
+        dfs.append(pd.read_parquet(raw_path))
+        
+    for file in all_files:
+        dfs.append(pd.read_parquet(file))
+        
+    total_races = 0
+    if dfs:
         consolidated_df = pd.concat(dfs, ignore_index=True)
+        consolidated_df = consolidated_df.drop_duplicates(subset=['Season', 'Round', 'Driver'], keep='last')
+        consolidated_df = consolidated_df.sort_values(['Season', 'Round']).reset_index(drop=True)
         
-        # Save to final parquet location
         os.makedirs('data/raw', exist_ok=True)
-        consolidated_df.to_parquet('data/raw/pro_f1_raw.parquet', index=False)
-        print("Successfully saved consolidated dataset to data/raw/pro_f1_raw.parquet")
+        consolidated_df.to_parquet(raw_path, index=False)
+        total_races = len(consolidated_df.groupby(['Season', 'Round']))
+        print(f"Successfully saved consolidated dataset ({len(consolidated_df)} rows across {total_races} races) to {raw_path}")
         
-        # Clean up temp files and directory
-        shutil.rmtree(temp_dir)
-        print("Cleaned up temporary directory data/raw/temp_races")
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir)
+            print("Cleaned up temporary directory data/raw/temp_races")
     else:
         print("No race files found to consolidate.")
+        
+    return {
+        'new_races_ingested': new_races_count,
+        'total_races': total_races,
+        'raw_path': raw_path
+    }
 
 if __name__ == "__main__":
-    run_ingestion(2018, 2026)
+    run_ingestion()

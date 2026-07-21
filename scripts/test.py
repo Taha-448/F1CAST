@@ -14,7 +14,7 @@ fastf1.plotting.setup_mpl(misc_mpl_mods=False)
 
 print("Loading 2026 British Grand Prix data...")
 # Load the 2026 Silverstone Session ('R' stands for Race)
-session = fastf1.get_session(2026, 'Silverstone', 'R')
+session = fastf1.get_session(2026, 'Spa', 'R')
 session.load()
 
 # --- Part 1: Display Race Results ---

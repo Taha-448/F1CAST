@@ -70,31 +70,40 @@ Install the necessary python dependencies:
 pip install pandas numpy xgboost fastf1 scipy scikit-learn matplotlib
 ```
 
-### 2. Ingest Historical Data
-Downloads and consolidates F1 race histories from the API:
+### 2. Run Automated Pipeline (Single Command)
+Runs ingestion, feature engineering, and model training/evaluation automatically in sequence:
 ```bash
-python scripts/ingestor.py
+python scripts/run_pipeline.py
 ```
 
-### 3. Generate Features
-Computes the rolling metrics and merges track profile metadata:
+#### Custom Pipeline Options:
 ```bash
-python scripts/engineer.py
+# Ingest up to latest available races and evaluate on the 3 most recent rounds
+python scripts/run_pipeline.py
+
+# Force re-downloading race data
+python scripts/run_pipeline.py --force-ingest
+
+# Skip ingestion & feature engineering if data is already prepared
+python scripts/run_pipeline.py --skip-ingest --skip-engineer
+
+# Explicitly test on specific season and rounds
+python scripts/run_pipeline.py --test-season 2026 --test-rounds 8 9 10
 ```
 
-### 4. Train & Evaluate
-Trains the XGBoost models and evaluates predictions for 2026 Rounds 8 & 9:
+### 3. Modular Step-by-Step Execution (Optional)
+If you prefer running individual pipeline modules manually:
 ```bash
-python scripts/main.py
+python scripts/ingestor.py     # Ingest raw FastF1 race data
+python scripts/engineer.py     # Generate rolling form & track features
+python scripts/main.py         # Train model & calculate predictions
 ```
 
 ---
 
 ## 📈 Evaluation Performance
 
-Performance is evaluated using the **Spearman Rank Correlation Coefficient** (comparing predicted rank to actual finishing position):
-* **2026 Round 8**: `0.913`
-* **2026 Round 9**: `0.598`
-* **Average Correlation**: `0.756`
+Performance is evaluated using the **Spearman Rank Correlation Coefficient** (comparing predicted rank to actual finishing position).
 
-Predictions for the test sets are saved locally in `logs/2026_test_results.csv`.
+Predictions for test sets are saved automatically in `logs/latest_test_results.csv` and visualization charts are saved to `logs/actual_vs_predicted_ranks.png`.
+
