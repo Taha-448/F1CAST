@@ -81,7 +81,10 @@ def main():
             end_year=args.end_year,
             force_refresh=args.force_ingest
         )
-        print(f"Ingestion complete: {ingest_res['new_races_ingested']} new race(s) fetched. Total dataset races: {ingest_res['total_races']}.")
+        if ingest_res.get('up_to_date'):
+            print(f"Ingestion complete: Dataset is already up to date. No new races to fetch (Total dataset races: {ingest_res['total_races']}).")
+        else:
+            print(f"Ingestion complete: {ingest_res['new_races_ingested']} new race(s) fetched. Total dataset races: {ingest_res['total_races']}.")
     else:
         print("\n--- STAGE 1: RAW DATA INGESTION (SKIPPED) ---")
 
