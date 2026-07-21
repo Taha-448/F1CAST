@@ -93,10 +93,15 @@ def run_pipeline(
     correlations = {}
     
     for (season, round_num), group in test_df.groupby(['Season', 'Round']):
+        gp_name = group['Circuit'].iloc[0] if 'Circuit' in group.columns and not group['Circuit'].empty else ""
         coef, _ = spearmanr(group['Predicted_Rank'], group['FinishPos'])
         if np.isnan(coef):
             coef = 0.0
-        print(f"Season {season} Round {round_num} Spearman Correlation: {coef:.3f}")
+        
+        label_str = f"Season {season} Round {round_num}"
+        if gp_name:
+            label_str += f" ({gp_name} GP)"
+        print(f"{label_str} Spearman Correlation: {coef:.3f}")
         correlations[f"{season}_R{round_num}"] = coef
         
     avg_corr = sum(correlations.values()) / len(correlations) if correlations else 0.0
@@ -130,6 +135,7 @@ def plot_results(test_df, show_plot=False):
     for i, (season, r) in enumerate(unique_races):
         ax = axes[i]
         round_data = test_df[(test_df['Season'] == season) & (test_df['Round'] == r)].copy()
+        gp_name = round_data['Circuit'].iloc[0] if 'Circuit' in round_data.columns and not round_data['Circuit'].empty else ""
         
         # Sort by actual finish position
         round_data = round_data.sort_values('FinishPos')
@@ -172,7 +178,10 @@ def plot_results(test_df, show_plot=False):
                 bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.6)
             )
             
-        ax.set_title(f"{season} Round {r} Results", fontsize=13, fontweight='bold', pad=12)
+        title_text = f"{season} Round {r}"
+        if gp_name:
+            title_text += f"\n({gp_name} GP)"
+        ax.set_title(title_text, fontsize=12, fontweight='bold', pad=10)
         ax.set_xlabel("Actual Finish Position", fontsize=11)
         if i == 0:
             ax.set_ylabel("Predicted Rank", fontsize=11)
