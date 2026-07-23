@@ -5,3 +5,4 @@ fastf1
 scipy
 scikit-learn
 matplotlib
+pyarrow
