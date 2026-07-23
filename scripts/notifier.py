@@ -12,8 +12,13 @@ import urllib.request
 import urllib.error
 
 RESEND_API_KEY = os.getenv('RESEND_API_KEY')
-NOTIFICATION_EMAIL = os.getenv('NOTIFICATION_EMAIL', 'subscribers@f1cast.com')
-SENDER_EMAIL = os.getenv('SENDER_EMAIL', 'F1CAST Predictions <onboarding@resend.dev>')
+NOTIFICATION_EMAIL = os.getenv('NOTIFICATION_EMAIL')
+if not NOTIFICATION_EMAIL or not NOTIFICATION_EMAIL.strip():
+    NOTIFICATION_EMAIL = 'subscribers@f1cast.com'
+
+SENDER_EMAIL = os.getenv('SENDER_EMAIL')
+if not SENDER_EMAIL or not SENDER_EMAIL.strip():
+    SENDER_EMAIL = 'F1CAST Predictions <onboarding@resend.dev>'
 
 def send_email(subject, html_content, recipient=None):
     if recipient is None:
