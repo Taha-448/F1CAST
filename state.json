@@ -1,7 +1,9 @@
 {
-  "last_processed_season": null,
-  "last_processed_round": null,
+  "last_processed_season": 2026,
+  "last_processed_round": 10,
   "predictions_sent": {},
-  "comparisons_sent": {},
-  "last_updated": null
+  "comparisons_sent": {
+    "2026_R10": true
+  },
+  "last_updated": "2026-07-23T09:43:12.889655"
 }
