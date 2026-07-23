@@ -37,7 +37,8 @@ def send_email(subject, html_content, recipient=None):
         data=json.dumps(payload).encode('utf-8'),
         headers={
             "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "User-Agent": "F1CAST-Pipeline/1.0"
         },
         method="POST"
     )
