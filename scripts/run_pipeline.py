@@ -136,8 +136,11 @@ def main():
                 subject = f"F1CAST Results: {season} Round {round_num} ({gp_name})"
                 html = notifier.format_comparison_email(season, round_num, gp_name, comp_list, spearman_corr)
                 dispatched = notifier.send_email(subject, html)
-                state_mgr.mark_comparison_sent(season, round_num)
-                print(f"[STATE] Marked post-race comparison state for {season} R{round_num}.")
+                if dispatched:
+                    state_mgr.mark_comparison_sent(season, round_num)
+                    print(f"[STATE] Marked post-race comparison state for {season} R{round_num}.")
+                else:
+                    print(f"[STATE WARNING] Email notification dispatch failed. Leaving state as pending.")
             else:
                 print(f"[STATE] Post-race comparison email already sent for {season} R{round_num} ({gp_name}). Skipping dispatch.")
         except Exception as err:
