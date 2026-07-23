@@ -1,5 +1,7 @@
-﻿# Data and Caches
-data/
+# Data and Caches
+data/*
+!data/raw/
+!data/raw/pro_f1_raw.parquet
 cache/
 fastf1_cache/
 logs/
