@@ -13,6 +13,7 @@ import sys
 import json
 import argparse
 from datetime import datetime
+import pandas as pd
 
 # Ensure project root and scripts directory are in sys.path
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -90,6 +91,80 @@ def main():
             print(f"Ingestion complete: {ingest_res['new_races_ingested']} new race(s) fetched. Total dataset races: {ingest_res['total_races']}.")
     else:
         print("\n--- STAGE 1: RAW DATA INGESTION (SKIPPED) ---")
+
+    # 1.5 Pre-Race Prediction Grid Check
+    upcoming_grid_df = None
+    if not args.skip_ingest:
+        print("\n--- CHECKING FOR UPCOMING RACES starting grid ---")
+        try:
+            upcoming_grid_df = get_upcoming_race_grid()
+        except Exception as e:
+            print(f"Notice: Could not fetch upcoming race grid ({e})")
+
+    # If we have an upcoming starting grid, check if we need to predict it
+    if upcoming_grid_df is not None:
+        try:
+            season = int(upcoming_grid_df['Season'].iloc[0])
+            round_num = int(upcoming_grid_df['Round'].iloc[0])
+            gp_name = format_gp_name(upcoming_grid_df)
+
+            if not state_mgr.is_prediction_sent(season, round_num):
+                print(f"\n[PRE-RACE] Starting grid detected for {season} R{round_num} ({gp_name}). Generating predictions...")
+                
+                # Combine grid temporarily with raw parquet
+                raw_path = 'data/raw/pro_f1_raw.parquet'
+                temp_raw_path = 'data/raw/pro_f1_raw_temp.parquet'
+                temp_eng_path = 'data/engineered/pro_f1_engineered_temp.parquet'
+
+                if os.path.exists(raw_path):
+                    raw_df = pd.read_parquet(raw_path)
+                    combined_df = pd.concat([raw_df, upcoming_grid_df], ignore_index=True)
+                    combined_df = combined_df.drop_duplicates(subset=['Season', 'Round', 'Driver'], keep='last')
+                    combined_df.to_parquet(temp_raw_path, index=False)
+                    
+                    # Run feature engineering temporarily
+                    print("[PRE-RACE] Building features for upcoming race...")
+                    build_features(raw_path=temp_raw_path, output_path=temp_eng_path)
+                    
+                    # Run pipeline prediction temporarily
+                    print("[PRE-RACE] Running model predictions...")
+                    pre_eval = run_model_pipeline(
+                        data_path=temp_eng_path,
+                        test_season=season,
+                        test_rounds=round_num,
+                        num_test_rounds=1,
+                        show_plot=False
+                    )
+                    
+                    if pre_eval and pre_eval.get('last_pred_json'):
+                        pred_file = pre_eval['last_pred_json']
+                        with open(pred_file, 'r', encoding='utf-8') as f:
+                            pred_data = json.load(f)
+                        
+                        subject = f"F1CAST Prediction: {season} Round {round_num} ({gp_name})"
+                        html = notifier.format_prediction_email(season, round_num, gp_name, pred_data['predictions'])
+                        
+                        print("[PRE-RACE] Dispatching prediction email...")
+                        dispatched = notifier.send_email(subject, html)
+                        if dispatched:
+                            state_mgr.mark_prediction_sent(season, round_num)
+                            print(f"[STATE] Marked pre-race prediction state as SENT for {season} R{round_num}.")
+                        else:
+                            print(f"[STATE WARNING] Pre-race email dispatch failed. Leaving state pending.")
+                    
+                    # Clean up temp files
+                    for path in [temp_raw_path, temp_eng_path]:
+                        if os.path.exists(path):
+                            try:
+                                os.remove(path)
+                            except Exception:
+                                pass
+                else:
+                    print("[PRE-RACE ERROR] Raw parquet file not found. Skipping pre-race predictions.")
+            else:
+                print(f"\n[PRE-RACE] Prediction email already sent for {season} R{round_num} ({gp_name}). Skipping.")
+        except Exception as pre_err:
+            print(f"[PRE-RACE ERROR] Failed during pre-race prediction flow: {pre_err}")
 
     # 2. Feature Engineering
     if not args.skip_engineer:
