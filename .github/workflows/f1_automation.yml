@@ -2,8 +2,8 @@ name: F1CAST Automated Pipeline
 
 on:
   schedule:
-    # Runs daily at 08:00 UTC (Check for new race data / dispatches predictions & comparisons)
-    - cron: '0 8 * * *'
+    # Runs daily at 04:00 UTC (9:00 AM PKT) to check for race data & predictions
+    - cron: '0 4 * * *'
   workflow_dispatch:
     # Allows manual trigger anytime via GitHub UI
 
