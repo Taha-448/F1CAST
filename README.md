@@ -32,18 +32,26 @@ The pipeline consists of two stages implemented in **`xgboost`**:
 ## 📂 Project Structure
 
 ```text
-├── data/                       # Dataset directories (ignored by git)
-│   ├── raw/                    # Raw Parquet outputs from ingestion
-│   └── engineered/             # Final engineered Parquet features
+├── .github/workflows/         # GitHub Actions workflows
+│   └── f1_automation.yml      # Serverless pipeline cron & manual trigger
+├── data/                       # Dataset directories
+│   ├── raw/                # Raw Parquet outputs (pro_f1_raw.parquet whitelisted)
+│   └── engineered/         # Final engineered Parquet features
 ├── cache/                      # FastF1 download and sqlite caches (ignored by git)
-├── logs/                       # Prediction csv exports (ignored by git)
+├── predictions/                # Pre-race prediction grid JSON outputs
+├── comparisons/                # Post-race prediction accuracy JSON outputs
+├── logs/                       # Prediction csv exports and charts (ignored by git)
 ├── scripts/                    # Python pipeline scripts
 │   ├── ingestor.py             # Fetches Ergast/FastF1 API data
 │   ├── metadata.py             # Defines static circuit characteristics
 │   ├── engineer.py             # Computes rolling forms & merges track metadata
 │   ├── model_pipeline.py       # Two-stage XGBoost model implementation
 │   ├── main.py                 # Splits data, trains model, and evaluates metrics
-│   └── test.py                 # FastF1 plotting demonstration
+│   ├── state.py            # Idempotency and runner state manager
+│   ├── notifier.py         # Formats and dispatches Resend HTML emails
+│   └── run_pipeline.py     # Orchestrator running Stage 1-4
+├── state.json                  # Tracks dispatched notification rounds
+├── requirements.txt            # Python dependencies lists
 ├── .gitignore                  # Git ignore file (excludes caches/data/logs)
 └── README.md                   # Project documentation
 ```
@@ -61,36 +69,56 @@ F1CAST uses a variety of engineered features to capture driver momentum, reliabi
 * **SampleWeight**: Time-decay weight applied during training to prioritize recent race outcomes.
 
 ---
-
+ 
+## 🤖 Serverless Automation (GitHub Actions)
+ 
+F1CAST includes an automated serverless workflow running daily on **GitHub Actions** (`.github/workflows/f1_automation.yml`):
+* **Trigger Schedule**: Runs daily at **`09:00 AM PKT`** (04:00 UTC).
+* **Pre-Race Flow**: Automatically detects if Qualifying results are available for an upcoming GP. If a grid is found and has not been predicted yet:
+  * Trains the model on all historical races, runs predictions for the upcoming race, writes `predictions/pred_*.json`, and sends a pre-race prediction email.
+* **Post-Race Flow**: Detects when race results are official. If the comparison has not been sent:
+  * Downloads the race classification, appends to the dataset, retrains the model, generates comparison reports, writes `comparisons/comp_*.json`, and sends a post-race results analysis email.
+* **Auto-Commit**: Automatically pushes updated data files (`data/raw/pro_f1_raw.parquet`), state tracking (`state.json`), predictions, and comparisons back to your repository.
+ 
+### 🔑 Repository Secrets Configuration
+To enable email dispatches via Resend API:
+1. Register on [Resend.com](https://resend.com) (free tier includes 3,000 emails/month).
+2. Set the following secrets under **Settings** → **Secrets and variables** → **Actions**:
+   * `RESEND_API_KEY`: Your Resend API Key (`re_...`).
+   * `NOTIFICATION_EMAIL`: Recipient email address for notifications.
+   * `SENDER_EMAIL`: *(Optional)* Custom verified sender email (defaults to `onboarding@resend.dev`).
+ 
+---
+ 
 ## 🚀 Getting Started
-
+ 
 ### 1. Installation
-Install the necessary python dependencies:
+Install the necessary python dependencies using requirements.txt:
 ```bash
-pip install pandas numpy xgboost fastf1 scipy scikit-learn matplotlib
+pip install -r requirements.txt
 ```
-
+ 
 ### 2. Run Automated Pipeline (Single Command)
 Runs ingestion, feature engineering, and model training/evaluation automatically in sequence:
 ```bash
 python scripts/run_pipeline.py
 ```
-
+ 
 #### Custom Pipeline Options:
 ```bash
 # Ingest up to latest available races and evaluate on the single most recent race (trains on all prior races)
 python scripts/run_pipeline.py
-
+ 
 # Force re-downloading race data
 python scripts/run_pipeline.py --force-ingest
-
+ 
 # Skip ingestion & feature engineering if data is already prepared
 python scripts/run_pipeline.py --skip-ingest --skip-engineer
-
+ 
 # Explicitly test on specific season and rounds
 python scripts/run_pipeline.py --test-season 2026 --test-rounds 8 9 10
 ```
-
+ 
 ### 3. Modular Step-by-Step Execution (Optional)
 If you prefer running individual pipeline modules manually:
 ```bash
@@ -98,12 +126,11 @@ python scripts/ingestor.py     # Ingest raw FastF1 race data
 python scripts/engineer.py     # Generate rolling form & track features
 python scripts/main.py         # Train model & calculate predictions
 ```
-
+ 
 ---
-
+ 
 ## 📈 Evaluation Performance
-
+ 
 Performance is evaluated using the **Spearman Rank Correlation Coefficient** (comparing predicted rank to actual finishing position).
-
+ 
 Predictions for test sets are saved automatically in `logs/latest_test_results.csv` and visualization charts are saved to `logs/actual_vs_predicted_ranks.png`.
-
